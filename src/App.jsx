@@ -4,9 +4,12 @@ import Footer from "./components/Footer";
 
 function App() {
   return (
-    <div>
+    <div className="overflow-x-hidden">
       <Header />
-      <News />
+      <div className="py-[10rem]">
+        <News />
+      </div>
+
       <Footer />
     </div>
   );

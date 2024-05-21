@@ -1,31 +1,48 @@
-import React, { useEffect, useState } from "react";
-import NewsList from "./NewsList";
+// UPDATED ONE
+
+import { useEffect, useState } from "react";
+import NewsCard from "./NewsCard";
 import Category from "./Category";
 
 const News = () => {
   const [data, setData] = useState([]);
   const [category, setCategory] = useState("General");
   const [filteredData, setFilteredData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchData();
   }, [category]);
 
   const fetchData = async (searchQuery = "") => {
+    setIsLoading(true);
+    setError(null);
     const country = "us";
-    const apiKey = "5b039b929ba344409712522284841478";
+    const apiKey = import.meta.env.VITE_API_KEY;
+    // const apiKey = "5b039b929ba344409712522284841478";
 
-    let url;
-    if (searchQuery) {
+    let url = `https://newsapi.org/v2/top-headlines?category=${category}&country=${country}&apiKey=${apiKey}`;
+
+    https: if (searchQuery) {
       url = `https://newsapi.org/v2/everything?q=${searchQuery}&country=${country}&apiKey=${apiKey}`;
-    } else {
-      url = `https://newsapi.org/v2/top-headlines?category=${category}&country=${country}&apiKey=${apiKey}`;
     }
 
-    const res = await fetch(url);
-    const response = await res.json();
-    setData(response.articles);
-    setFilteredData(response.articles);
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setData(data.articles);
+      setFilteredData(data.articles);
+      console.log(data.articles);
+    } catch (error) {
+      setError(error.message);
+      console.error("Fetching data failed:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCategoryChange = (newCategory) => {
@@ -35,27 +52,35 @@ const News = () => {
 
   const handleSearch = (searchQuery) => {
     const lowerSearchQuery = searchQuery.toLowerCase();
-    // console.log("lowerSearchQuery:", lowerSearchQuery);
-
     const filteredArticles = data.filter((article) =>
       article.description?.toLowerCase()?.includes(lowerSearchQuery)
     );
-    // console.log("filteredArticles:", filteredArticles);
-
     setFilteredData(filteredArticles);
   };
 
+  if (isLoading)
+    return <p className="text-3xl text-center  text-blue-800">Loading...</p>;
+  if (error)
+    return (
+      <p className="text-3xl text-center text-red-800">
+        {"Something went wrong! Try again."}
+      </p>
+    );
+
   return (
-    <section className="news-container w-[100vw] ">
+    <section className="news-container w-[100%]">
       <div>
         <Category
           handleCategoryChange={handleCategoryChange}
           handleSearch={handleSearch}
         />
-        <div className=" w-[100vw] flex justify-center items-center">
-          <div className="w-[94vw] mt-11 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
+        <div className="w-[100%] flex justify-center items-center">
+          <div
+            className="w-[90%]  sm:w-[94%] md:w-[94%] lg:w-[96%] mt-14
+           grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3"
+          >
             {filteredData.map((article, index) => (
-              <NewsList
+              <NewsCard
                 key={index}
                 title={article.title}
                 author={article.author}
